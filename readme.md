@@ -1,20 +1,20 @@
-# Official Chia Docker Container
+# Official Chik Docker Container
 
 ## Quick Start
 
-These examples shows valid setups using Chia for both docker run and docker-compose. Note that you should read some documentation at some point, but this is a good place to start.
+These examples shows valid setups using Chik for both docker run and docker-compose. Note that you should read some documentation at some point, but this is a good place to start.
 
 ### Docker run
 Simple example:
 ```bash
-docker run --name chia --expose=8444 -v /path/to/plots:/plots -d ghcr.io/chia-network/chia:latest
+docker run --name chik --expose=8444 -v /path/to/plots:/plots -d ghcr.io/chik-network/chik:latest
 ```
 Syntax
 ```bash
-docker run [--name <container-name>] [--expose=<port>] [-v </path/to/plots:/plots>] -d ghcr.io/chia-network/chia:latest
+docker run [--name <container-name>] [--expose=<port>] [-v </path/to/plots:/plots>] -d ghcr.io/chik-network/chik:latest
 ```
 Optional Docker parameters:
-- Give the container a name: `--name=chia`
+- Give the container a name: `--name=chik`
 - Accept incoming connections: `--expose=8444`
 - Volume mount plots: `-v /path/to/plots:/plots`
 
@@ -24,10 +24,10 @@ Optional Docker parameters:
 ```yaml
 version: "3.6"
 services:
-  chia:
-    container_name: chia
+  chik:
+    container_name: chik
     restart: unless-stopped
-    image: ghcr.io/chia-network/chia:latest
+    image: ghcr.io/chik-network/chik:latest
     ports:
       - 8444:8444
     volumes:
@@ -36,7 +36,7 @@ services:
 
 ## Configuration
 
-You can modify the behavior of your Chia container by setting specific environment variables.
+You can modify the behavior of your Chik container by setting specific environment variables.
 
 ### Timezone
 
@@ -54,15 +54,15 @@ To use your own keys pass a file with your mnemonic as arguments on startup
 ```
 or pass keys into the running container with your mnemonic
 ```bash
-docker exec -it <container-name> venv/bin/chia keys add
+docker exec -it <container-name> venv/bin/chik keys add
 ```
-alternatively you can pass in your local keychain, if you have previously deployed chia with these keys on the host machine
+alternatively you can pass in your local keychain, if you have previously deployed chik with these keys on the host machine
 ```bash
 -v ~/.local/share/python_keyring/:/root/.local/share/python_keyring/
 ```
 or if you would like to persist the entire mainnet subdirectory and not touch the key directories at all
 ```bash
--v ~/.chia/mainnet:/root/.chia/mainnet -e keys="persistent"
+-v ~/.chik/mainnet:/root/.chik/mainnet -e keys="persistent"
 ```
 
 
@@ -70,8 +70,8 @@ or if you would like to persist the entire mainnet subdirectory and not touch th
 
 You can persist whole db and configuration, simply mount it to Host.
 ```bash
--v ~/.chia:/root/.chia \
--v ~/.chia_keys:/root/.chia_keys
+-v ~/.chik:/root/.chik \
+-v ~/.chik_keys:/root/.chik_keys
 ```
 
 ### Farmer only
@@ -129,7 +129,7 @@ To disable UPnP support (enabled by default)
 ```
 
 ### Log to file
-Log file can be used by external tools like chiadog, etc. Enabled by default.
+Log file can be used by external tools like chikdog, etc. Enabled by default.
 
 To disable log file generation, use
 ```bash
@@ -141,10 +141,10 @@ To disable log file generation, use
 ```yaml
 version: "3.6"
 services:
-  chia:
-    container_name: chia
+  chik:
+    container_name: chik
     restart: unless-stopped
-    image: ghcr.io/chia-network/chia:latest
+    image: ghcr.io/chik-network/chik:latest
     ports:
       - 8444:8444
     environment:
@@ -169,32 +169,32 @@ services:
 #     log_to_file: true
     volumes:
       - /path/to/plots:/plots
-      - /home/user/.chia:/root/.chia
+      - /home/user/.chik:/root/.chik
 #     - /home/user/mnemonic:/path/in/container
 ```
 
 ## CLI
 
-You can run commands externally with venv (this works for most chia [CLI commands](https://github.com/Chia-Network/chia-blockchain/wiki/CLI-Commands-Reference))
+You can run commands externally with venv (this works for most chik [CLI commands](https://github.com/Chik-Network/chik-blockchain/wiki/CLI-Commands-Reference))
 ```bash
-docker exec -it chia venv/bin/chia plots add -d /plots
+docker exec -it chik venv/bin/chik plots add -d /plots
 ```
 
 ### Is it working?
 
 You can see status from outside the container
 ```bash
-docker exec -it chia venv/bin/chia show -s -c
+docker exec -it chik venv/bin/chik show -s -c
 ```
 or
 ```bash
-docker exec -it chia venv/bin/chia farm summary
+docker exec -it chik venv/bin/chik farm summary
 ```
 
 ### Connect to testnet?
 
 ```bash
-docker run -d --expose=58444 -e testnet=true --name chia ghcr.io/chia-network/chia:latest
+docker run -d --expose=58444 -e testnet=true --name chik ghcr.io/chik-network/chik:latest
 ```
 
 #### Need a wallet?
@@ -202,23 +202,23 @@ docker run -d --expose=58444 -e testnet=true --name chia ghcr.io/chia-network/ch
 To get new wallet, execute command and follow the prompts:
 
 ```bash
-docker exec -it chia-farmer1 venv/bin/chia wallet show
+docker exec -it chik-farmer1 venv/bin/chik wallet show
 ```
 
 ## Building
 
 ```bash
-docker build -t chia --build-arg BRANCH=latest .
+docker build -t chik --build-arg BRANCH=latest .
 ```
 
 ## Healthchecks
 
-The Dockerfile includes a HEALTHCHECK instruction that runs one or more curl commands against the Chia RPC API. In Docker, this can be disabled using an environment variable `-e healthcheck=false` as part of the `docker run` command. Or in docker-compose you can add it to your Chia service, like so:
+The Dockerfile includes a HEALTHCHECK instruction that runs one or more curl commands against the Chik RPC API. In Docker, this can be disabled using an environment variable `-e healthcheck=false` as part of the `docker run` command. Or in docker-compose you can add it to your Chik service, like so:
 
 ```yaml
 version: "3.6"
 services:
-  chia:
+  chik:
     ...
     environment:
       healthcheck: "false"

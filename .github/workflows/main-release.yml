@@ -1,4 +1,4 @@
-name: Build Chia Main Branch
+name: Build Chik Main Branch
 
 on:
   push:
@@ -40,8 +40,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/chia-network/chia
-            chianetwork/chia-docker
+            ghcr.io/chik-network/chik
+            chiknetwork/chik-docker
           tags: |
             type=raw,value=main
 

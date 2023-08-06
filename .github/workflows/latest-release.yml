@@ -35,7 +35,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PAT }}
 
-      # Get the most recent release from chia-blockchain and build that
+      # Get the most recent release from chik-blockchain and build that
       - uses: actions/github-script@v6
         id: 'latest-tag'
         with:
@@ -43,8 +43,8 @@ jobs:
           result-encoding: string
           script: |
             const release = await github.rest.repos.getLatestRelease({
-              owner: 'Chia-Network',
-              repo: 'chia-blockchain',
+              owner: 'Chik-Network',
+              repo: 'chik-blockchain',
             });
             return release.data.tag_name;
 
@@ -53,8 +53,8 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: |
-            ghcr.io/chia-network/chia
-            chianetwork/chia-docker
+            ghcr.io/chik-network/chik
+            chiknetwork/chik-docker
           tags: |
             type=raw,value=latest
             type=raw,value=${{ steps.latest-tag.outputs.result }}
@@ -81,4 +81,4 @@ jobs:
           # or you can signup for free at https://snyk.io/login
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          image: ghcr.io/chia-network/chia:latest
+          image: ghcr.io/chik-network/chik:latest

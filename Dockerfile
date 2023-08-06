@@ -1,5 +1,5 @@
-# CHIA BUILD STEP
-FROM python:3.9-bullseye AS chia_build
+# CHIK BUILD STEP
+FROM python:3.9-bullseye AS chik_build
 
 ARG BRANCH=latest
 ARG COMMIT=""
@@ -8,16 +8,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
         lsb-release sudo
 
-WORKDIR /chia-blockchain
+WORKDIR /chik-blockchain
 
 RUN echo "cloning ${BRANCH}" && \
-    git clone --depth 1 --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chia-Network/chia-blockchain.git . && \
+    git clone --depth 1 --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chik-Network/chik-blockchain.git . && \
     # If COMMIT is set, check out that commit, otherwise just continue
     ( [ ! -z "$COMMIT" ] && git fetch origin $COMMIT && git checkout $COMMIT ) || true && \
     echo "running build-script" && \
     /bin/sh ./install.sh
 
-# Get yq for chia config changes
+# Get yq for chik config changes
 FROM mikefarah/yq:4 AS yq
 
 # IMAGE BUILD
@@ -25,7 +25,7 @@ FROM python:3.9-slim-bullseye
 
 EXPOSE 8555 8444
 
-ENV CHIA_ROOT=/root/.chia/mainnet
+ENV CHIK_ROOT=/root/.chik/mainnet
 ENV keys="generate"
 ENV service="farmer"
 ENV plots_dir="/plots"
@@ -36,7 +36,7 @@ ENV TZ="UTC"
 ENV upnp="true"
 ENV log_to_file="true"
 ENV healthcheck="true"
-ENV chia_args=
+ENV chik_args=
 ENV full_node_peer=
 
 # Deprecated legacy options
@@ -56,10 +56,10 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     dpkg-reconfigure -f noninteractive tzdata
 
 COPY --from=yq /usr/bin/yq /usr/bin/yq
-COPY --from=chia_build /chia-blockchain /chia-blockchain
+COPY --from=chik_build /chik-blockchain /chik-blockchain
 
-ENV PATH=/chia-blockchain/venv/bin:$PATH
-WORKDIR /chia-blockchain
+ENV PATH=/chik-blockchain/venv/bin:$PATH
+WORKDIR /chik-blockchain
 
 COPY docker-start.sh /usr/local/bin/
 COPY docker-entrypoint.sh /usr/local/bin/

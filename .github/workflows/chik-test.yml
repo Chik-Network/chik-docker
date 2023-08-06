@@ -1,4 +1,4 @@
-name: Test official Chia Docker Image
+name: Test official Chik Docker Image
 
 on:
   pull_request:
@@ -16,8 +16,8 @@ jobs:
           result-encoding: string
           script: |
             const release = await github.rest.repos.getLatestRelease({
-              owner: 'Chia-Network',
-              repo: 'chia-blockchain',
+              owner: 'Chik-Network',
+              repo: 'chik-blockchain',
             });
             return release.data.tag_name;
 

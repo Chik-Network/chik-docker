@@ -14,7 +14,7 @@ logger () {
     if [[ ${log_to_file} != 'true' ]]; then
         echo "$1" >> /proc/1/fd/1
     else
-        echo "$1" >> "${CHIA_ROOT}/log/debug.log"
+        echo "$1" >> "${CHIK_ROOT}/log/debug.log"
     fi
 }
 
@@ -73,8 +73,8 @@ fi
 
 if [[ ${node_check} == "true" ]]; then
     curl -X POST --fail \
-      --cert "${CHIA_ROOT}/config/ssl/full_node/private_full_node.crt" \
-      --key "${CHIA_ROOT}/config/ssl/full_node/private_full_node.key" \
+      --cert "${CHIK_ROOT}/config/ssl/full_node/private_full_node.crt" \
+      --key "${CHIK_ROOT}/config/ssl/full_node/private_full_node.key" \
       -d '{}' -k -H "Content-Type: application/json" https://localhost:8555/healthz
 
     # shellcheck disable=SC2181
@@ -86,8 +86,8 @@ fi
 
 if [[ ${farmer_check} == "true" ]]; then
     curl -X POST --fail \
-      --cert "${CHIA_ROOT}/config/ssl/farmer/private_farmer.crt" \
-      --key "${CHIA_ROOT}/config/ssl/farmer/private_farmer.key" \
+      --cert "${CHIK_ROOT}/config/ssl/farmer/private_farmer.crt" \
+      --key "${CHIK_ROOT}/config/ssl/farmer/private_farmer.key" \
       -d '{}' -k -H "Content-Type: application/json" https://localhost:8559/healthz
 
     # shellcheck disable=SC2181
@@ -99,8 +99,8 @@ fi
 
 if [[ ${harvester_check} == "true" ]]; then
     curl -X POST --fail \
-      --cert "${CHIA_ROOT}/config/ssl/harvester/private_harvester.crt" \
-      --key "${CHIA_ROOT}/config/ssl/harvester/private_harvester.key" \
+      --cert "${CHIK_ROOT}/config/ssl/harvester/private_harvester.crt" \
+      --key "${CHIK_ROOT}/config/ssl/harvester/private_harvester.key" \
       -d '{}' -k -H "Content-Type: application/json" https://localhost:8560/healthz
 
     # shellcheck disable=SC2181
@@ -112,8 +112,8 @@ fi
 
 if [[ ${wallet_check} == "true" ]]; then
     curl -X POST --fail \
-      --cert "${CHIA_ROOT}/config/ssl/wallet/private_wallet.crt" \
-      --key "${CHIA_ROOT}/config/ssl/wallet/private_wallet.key" \
+      --cert "${CHIK_ROOT}/config/ssl/wallet/private_wallet.crt" \
+      --key "${CHIK_ROOT}/config/ssl/wallet/private_wallet.key" \
       -d '{}' -k -H "Content-Type: application/json" https://localhost:9256/healthz
 
     # shellcheck disable=SC2181
