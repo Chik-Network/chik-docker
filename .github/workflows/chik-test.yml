@@ -1,7 +1,7 @@
 name: Test official Chik Docker Image
 
 on:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   docker_build:

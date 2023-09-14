@@ -47,9 +47,9 @@ for p in ${plots_dir//:/ }; do
 done
 
 if [[ ${recursive_plot_scan} == 'true' ]]; then
-  sed -i 's/recursive_plot_scan: false/recursive_plot_scan: true/g' "$CHIK_ROOT/config/config.yaml"
+  yq -i '.harvester.recursive_plot_scan = true' "$CHIK_ROOT/config/config.yaml"
 else
-  sed -i 's/recursive_plot_scan: true/recursive_plot_scan: false/g' "$CHIK_ROOT/config/config.yaml"
+  yq -i '.harvester.recursive_plot_scan = false' "$CHIK_ROOT/config/config.yaml"
 fi
 
 chik configure --upnp "${upnp}"
@@ -102,6 +102,25 @@ if [[ ${log_to_file} != 'true' ]]; then
   sed -i 's/log_stdout: false/log_stdout: true/g' "$CHIK_ROOT/config/config.yaml"
 else
   sed -i 's/log_stdout: true/log_stdout: false/g' "$CHIK_ROOT/config/config.yaml"
+fi
+
+# Compressed plot harvesting settings.
+if [[ -n "$parallel_decompressor_count" && "$parallel_decompressor_count" != 0 ]]; then
+  yq -i '.harvester.parallel_decompressor_count = env(parallel_decompressor_count)' "$CHIK_ROOT/config/config.yaml"
+else
+  yq -i '.harvester.parallel_decompressor_count = 0' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n "$decompressor_thread_count" && "$decompressor_thread_count" != 0 ]]; then
+  yq -i '.harvester.decompressor_thread_count = env(decompressor_thread_count)' "$CHIK_ROOT/config/config.yaml"
+else
+  yq -i '.harvester.decompressor_thread_count = 0' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n "$use_gpu_harvesting" && "$use_gpu_harvesting" == 'true' ]]; then
+  yq -i '.harvester.use_gpu_harvesting = True' "$CHIK_ROOT/config/config.yaml"
+else
+  yq -i '.harvester.use_gpu_harvesting = False' "$CHIK_ROOT/config/config.yaml"
 fi
 
 # Map deprecated legacy startup options.

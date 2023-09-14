@@ -75,7 +75,7 @@ if [[ ${node_check} == "true" ]]; then
     curl -X POST --fail \
       --cert "${CHIK_ROOT}/config/ssl/full_node/private_full_node.crt" \
       --key "${CHIK_ROOT}/config/ssl/full_node/private_full_node.key" \
-      -d '{}' -k -H "Content-Type: application/json" https://localhost:8555/healthz
+      -d '{}' -k -H "Content-Type: application/json" https://localhost:9789/healthz
 
     # shellcheck disable=SC2181
     if [[ "$?" -ne 0 ]]; then

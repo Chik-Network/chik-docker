@@ -7,7 +7,7 @@ These examples shows valid setups using Chik for both docker run and docker-comp
 ### Docker run
 Simple example:
 ```bash
-docker run --name chik --expose=8444 -v /path/to/plots:/plots -d ghcr.io/chik-network/chik:latest
+docker run --name chik --expose=9678 -v /path/to/plots:/plots -d ghcr.io/chik-network/chik:latest
 ```
 Syntax
 ```bash
@@ -15,7 +15,7 @@ docker run [--name <container-name>] [--expose=<port>] [-v </path/to/plots:/plot
 ```
 Optional Docker parameters:
 - Give the container a name: `--name=chik`
-- Accept incoming connections: `--expose=8444`
+- Accept incoming connections: `--expose=9678`
 - Volume mount plots: `-v /path/to/plots:/plots`
 
 
@@ -29,7 +29,7 @@ services:
     restart: unless-stopped
     image: ghcr.io/chik-network/chik:latest
     ports:
-      - 8444:8444
+      - 9678:9678
     volumes:
       - /path/to/plots:/plots
 ```
@@ -92,7 +92,7 @@ To start a harvester only node pass
 
 To set the full_node peer's hostname and port, set the "full_node_peer" environment variable with the format `hostname:port`
 ```bash
--e full_node_peer="node:8444"
+-e full_node_peer="node:9678"
 ```
 This will configure the full_node peer hostname and port for the wallet, farmer, and timelord sections of the config.yaml file.
 
@@ -103,6 +103,25 @@ The `plots_dir` environment variable can be used to specify the directory contai
 Or, you can simply mount `/plots` path to your host machine.
 
 Set the environment variable `recursive_plot_scan` to `true` to enable the recursive plot scan configuration option.
+
+### Compressed Plots
+
+There are a few environment variables that control compressed plot settings for Harvesters ran with chik-docker. The default settings leave compressed plot harvesting disabled, but it can be enabled.
+
+See the [official documentation](https://docs.chiknetwork.com/farming-compressed-plots/#cli) for a description on what each of these settings do.
+
+Compressed plot farming can be enabled by setting the following:
+
+```bash
+-e parallel_decompressor_count=1
+-e decompressor_thread_count=1
+```
+
+And to use an nvidia GPU for plot decompression, set:
+
+```bash
+-e use_gpu_harvesting="true"
+```
 
 ### Log level
 To set the log level to one of CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
@@ -146,7 +165,7 @@ services:
     restart: unless-stopped
     image: ghcr.io/chik-network/chik:latest
     ports:
-      - 8444:8444
+      - 9678:9678
     environment:
       # Farmer Only
 #     service: farmer-only
@@ -194,8 +213,20 @@ docker exec -it chik venv/bin/chik farm summary
 ### Connect to testnet?
 
 ```bash
-docker run -d --expose=58444 -e testnet=true --name chik ghcr.io/chik-network/chik:latest
+docker run -d --expose=59678 -e testnet=true --name chik ghcr.io/chik-network/chik:latest
 ```
+
+### Connect remotely
+
+Sometimes you may want to access Chik RPCs from outside of the container, or connect a GUI to a remote Chik farm. In those instances, you may need to configure the `self_hostname` key in the Chik config file.
+
+By default this is set to `127.0.0.1` in chik-docker, but can be configured using the `self_hostname` environment variable, like so:
+
+```bash
+docker run -d -e self_hostname="0.0.0.0" --name chik ghcr.io/chik-network/chik:latest
+```
+
+This sets self_hostname in the config to `0.0.0.0`, which will allow you to access the Chik RPC from outside of the container (you will still need a copy of the private cert/key for the component you're attempting to access.)
 
 #### Need a wallet?
 
