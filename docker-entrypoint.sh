@@ -11,17 +11,138 @@ cd /chik-blockchain || exit 1
 # shellcheck disable=SC1091
 . ./activate
 
+# Set a few overrides if the service variable contains simulator
+if [ -z "${service##*simulator*}" ]; then
+    echo "Setting up environment for simulator..."
+    export CHIK_ROOT=/root/.chik/simulator/main
+    export self_hostname="0.0.0.0"
+
+    if [[ ${skip_sim_create} != 'true' ]]; then
+      if [ -f /root/.chik/simulator/mnemonic ]; then
+          echo "Using provided mnemonic from /root/.chik/simulator/mnemonic"
+          # Use awk to trim leading and trailing whitespace while preserving internal spaces
+          mnemonic=$(awk '{$1=$1};1' /root/.chik/simulator/mnemonic)
+      fi
+
+      if [ -n "$mnemonic" ]; then  # Check if mnemonic is non-empty after trimming
+        chik dev sim create --docker-mode --mnemonic "${mnemonic}"
+      else
+        chik dev sim create --docker-mode
+      fi
+
+      chik stop -d all
+      chik keys show --show-mnemonic-seed --json | jq -r '.keys[0].mnemonic' > /root/.chik/simulator/mnemonic
+    fi
+fi
+
 # shellcheck disable=SC2086
 chik ${chik_args} init --fix-ssl-permissions
 
 if [[ -n ${ca} ]]; then
-  # shellcheck disable=SC2086
-  chik ${chik_args} init -c "${ca}"
+  if ! openssl verify -CAfile "${ca}/private_ca.crt" "${CHIK_ROOT}/config/ssl/harvester/private_harvester.crt" &>/dev/null; then
+    echo "initializing from new CA"
+    # shellcheck disable=SC2086
+    chik ${chik_args} init -c "${ca}"
+  else
+    echo "using existing CA"
+  fi
 fi
 
+# Enables whatever the default testnet is for the version of chik that is running
 if [[ ${testnet} == 'true' ]]; then
   echo "configure testnet"
   chik configure --testnet true
+fi
+
+# Allows using another testnet that isn't the default testnet
+if [[ -n ${network} ]]; then
+  echo "Setting network name to ${network}"
+  yq -i '
+    .selected_network = env(network) |
+    .seeder.selected_network = env(network) |
+    .harvester.selected_network = env(network) |
+    .pool.selected_network = env(network) |
+    .farmer.selected_network = env(network) |
+    .timelord.selected_network = env(network) |
+    .full_node.selected_network = env(network) |
+    .ui.selected_network = env(network) |
+    .introducer.selected_network = env(network) |
+    .wallet.selected_network = env(network) |
+    .data_layer.selected_network = env(network)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${network_port} ]]; then
+  echo "Setting network port to ${network_port}"
+  yq -i '
+    .seeder.port = env(network_port) |
+    .seeder.other_peers_port = env(network_port) |
+    .farmer.full_node_peers[0].port = env(network_port) |
+    .timelord.full_node_peers[0].port = env(network_port) |
+    .full_node.port = env(network_port) |
+    .full_node.introducer_peer.port = env(network_port) |
+    .introducer.port = env(network_port) |
+    .wallet.full_node_peers[0].port = env(network_port) |
+    .wallet.introducer_peer.port = env(network_port)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${introducer_address} ]]; then
+  echo "Setting introducer to ${introducer_address}"
+  yq -i '
+    .full_node.introducer_peer.host = env(introducer_address) |
+    .wallet.introducer_peer.host = env(introducer_address)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${dns_introducer_address} ]]; then
+  echo "Setting dns introducer to ${dns_introducer_address}"
+  yq -i '
+    .full_node.dns_servers = [env(dns_introducer_address)] |
+    .wallet.dns_servers = [env(dns_introducer_address)]
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_bootstrap_peers} ]]; then
+  echo "Setting seeder.bootstrap_peers to ${seeder_bootstrap_peers}"
+  yq -i '
+    .seeder.bootstrap_peers = [env(seeder_bootstrap_peers)]
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_minimum_height} ]]; then
+  echo "Setting seeder.minimum_height to ${seeder_minimum_height}"
+  yq -i '
+    .seeder.minimum_height = env(seeder_minimum_height)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_domain_name} ]]; then
+  echo "Setting seeder.domain_name to ${seeder_domain_name}"
+  yq -i '
+    .seeder.domain_name = env(seeder_domain_name)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_nameserver} ]]; then
+  echo "Setting seeder.nameserver to ${seeder_nameserver}"
+  yq -i '
+    .seeder.nameserver = env(seeder_nameserver)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_ttl} ]]; then
+  echo "Setting seeder.ttl to ${seeder_ttl}"
+  yq -i '
+    .seeder.ttl = env(seeder_ttl)
+    ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${seeder_soa_rname} ]]; then
+  echo "Setting seeder.soa.rname to ${seeder_soa_rname}"
+  yq -i '
+    .seeder.soa.rname = env(seeder_soa_rname)
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ ${keys} == "persistent" ]]; then
@@ -121,6 +242,17 @@ if [[ -n "$use_gpu_harvesting" && "$use_gpu_harvesting" == 'true' ]]; then
   yq -i '.harvester.use_gpu_harvesting = True' "$CHIK_ROOT/config/config.yaml"
 else
   yq -i '.harvester.use_gpu_harvesting = False' "$CHIK_ROOT/config/config.yaml"
+fi
+
+# Install timelord if service variable contains timelord substring
+if [ -z "${service##*timelord*}" ]; then
+    echo "Installing timelord using install-timelord.sh"
+
+    # install-timelord.sh relies on lsb-release for determining the cmake installation method, and git for building chikvdf
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y lsb-release git
+
+    /bin/sh ./install-timelord.sh
 fi
 
 # Map deprecated legacy startup options.

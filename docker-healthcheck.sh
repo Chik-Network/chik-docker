@@ -88,7 +88,7 @@ if [[ ${farmer_check} == "true" ]]; then
     curl -X POST --fail \
       --cert "${CHIK_ROOT}/config/ssl/farmer/private_farmer.crt" \
       --key "${CHIK_ROOT}/config/ssl/farmer/private_farmer.key" \
-      -d '{}' -k -H "Content-Type: application/json" https://localhost:8559/healthz
+      -d '{}' -k -H "Content-Type: application/json" https://localhost:9793/healthz
 
     # shellcheck disable=SC2181
     if [[ "$?" -ne 0 ]]; then
@@ -101,7 +101,7 @@ if [[ ${harvester_check} == "true" ]]; then
     curl -X POST --fail \
       --cert "${CHIK_ROOT}/config/ssl/harvester/private_harvester.crt" \
       --key "${CHIK_ROOT}/config/ssl/harvester/private_harvester.key" \
-      -d '{}' -k -H "Content-Type: application/json" https://localhost:8560/healthz
+      -d '{}' -k -H "Content-Type: application/json" https://localhost:9794/healthz
 
     # shellcheck disable=SC2181
     if [[ "$?" -ne 0 ]]; then

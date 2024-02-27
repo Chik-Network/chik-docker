@@ -1,5 +1,5 @@
 # CHIK BUILD STEP
-FROM python:3.9-slim AS chik_build
+FROM python:3.10-slim AS chik_build
 
 ARG BRANCH=latest
 ARG COMMIT=""
@@ -11,7 +11,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 WORKDIR /chik-blockchain
 
 RUN echo "cloning ${BRANCH}" && \
-    git clone --depth 1 --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chik-Network/chik-blockchain.git . && \
+    if [ -z "$COMMIT" ]; then \
+        DEPTH_FLAG="--depth 1"; \
+    else \
+        DEPTH_FLAG=""; \
+    fi && \
+    git clone ${DEPTH_FLAG} --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chik-Network/chik-blockchain.git . && \
     # If COMMIT is set, check out that commit, otherwise just continue
     ( [ ! -z "$COMMIT" ] && git fetch origin $COMMIT && git checkout $COMMIT ) || true && \
     echo "running build-script" && \
@@ -21,7 +26,7 @@ RUN echo "cloning ${BRANCH}" && \
 FROM mikefarah/yq:4 AS yq
 
 # IMAGE BUILD
-FROM python:3.9-slim
+FROM python:3.10-slim
 
 EXPOSE 9789 9678
 
@@ -50,7 +55,7 @@ ENV farmer="false"
 #   netcat: Healthchecking the daemon
 #   yq: changing config settings
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y sudo tzdata curl netcat-traditional && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y sudo tzdata curl netcat-traditional jq && \
     rm -rf /var/lib/apt/lists/* && \
     ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone && \
     dpkg-reconfigure -f noninteractive tzdata
