@@ -1,5 +1,5 @@
-# CHIK BUILD STEP
-FROM python:3.10-slim AS chik_build
+# CHIA BUILD STEP
+FROM python:3.11-slim AS chia_build
 
 ARG BRANCH=latest
 ARG COMMIT=""
@@ -8,7 +8,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
         lsb-release sudo git
 
-WORKDIR /chik-blockchain
+WORKDIR /chia-blockchain
 
 RUN echo "cloning ${BRANCH}" && \
     if [ -z "$COMMIT" ]; then \
@@ -16,21 +16,21 @@ RUN echo "cloning ${BRANCH}" && \
     else \
         DEPTH_FLAG=""; \
     fi && \
-    git clone ${DEPTH_FLAG} --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chik-Network/chik-blockchain.git . && \
+    git clone ${DEPTH_FLAG} --branch ${BRANCH} --recurse-submodules=mozilla-ca https://github.com/Chia-Network/chia-blockchain.git . && \
     # If COMMIT is set, check out that commit, otherwise just continue
     ( [ ! -z "$COMMIT" ] && git fetch origin $COMMIT && git checkout $COMMIT ) || true && \
     echo "running build-script" && \
     /bin/sh ./install.sh -s
 
-# Get yq for chik config changes
+# Get yq for chia config changes
 FROM mikefarah/yq:4 AS yq
 
 # IMAGE BUILD
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-EXPOSE 9789 9678
+EXPOSE 8555 8444
 
-ENV CHIK_ROOT=/root/.chik/mainnet
+ENV CHIA_ROOT=/root/.chia/mainnet
 ENV keys="generate"
 ENV service="farmer"
 ENV plots_dir="/plots"
@@ -41,7 +41,7 @@ ENV TZ="UTC"
 ENV upnp="true"
 ENV log_to_file="true"
 ENV healthcheck="true"
-ENV chik_args=
+ENV chia_args=
 ENV full_node_peer=
 
 # Deprecated legacy options
@@ -61,14 +61,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     dpkg-reconfigure -f noninteractive tzdata
 
 COPY --from=yq /usr/bin/yq /usr/bin/yq
-COPY --from=chik_build /chik-blockchain /chik-blockchain
+COPY --from=chia_build /chia-blockchain /chia-blockchain
 
-ENV PATH=/chik-blockchain/venv/bin:$PATH
-WORKDIR /chik-blockchain
+ENV PATH=/chia-blockchain/venv/bin:$PATH
+WORKDIR /chia-blockchain
 
 COPY docker-start.sh /usr/local/bin/
 COPY docker-entrypoint.sh /usr/local/bin/
 COPY docker-healthcheck.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/docker-start.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-healthcheck.sh
 
 HEALTHCHECK --interval=1m --timeout=10s --start-period=20m \
   CMD /bin/bash /usr/local/bin/docker-healthcheck.sh || exit 1
