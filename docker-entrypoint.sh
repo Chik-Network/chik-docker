@@ -6,7 +6,7 @@ if [[ -n "${TZ}" ]]; then
   ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 fi
 
-cd /chia-blockchain || exit 1
+cd /chik-blockchain || exit 1
 
 # shellcheck disable=SC1091
 . ./activate
@@ -14,44 +14,44 @@ cd /chia-blockchain || exit 1
 # Set a few overrides if the service variable contains simulator
 if [ -z "${service##*simulator*}" ]; then
     echo "Setting up environment for simulator..."
-    export CHIA_ROOT=/root/.chia/simulator/main
+    export CHIK_ROOT=/root/.chik/simulator/main
     export self_hostname="0.0.0.0"
 
     if [[ ${skip_sim_create} != 'true' ]]; then
-      if [ -f /root/.chia/simulator/mnemonic ]; then
-          echo "Using provided mnemonic from /root/.chia/simulator/mnemonic"
+      if [ -f /root/.chik/simulator/mnemonic ]; then
+          echo "Using provided mnemonic from /root/.chik/simulator/mnemonic"
           # Use awk to trim leading and trailing whitespace while preserving internal spaces
-          mnemonic=$(awk '{$1=$1};1' /root/.chia/simulator/mnemonic)
+          mnemonic=$(awk '{$1=$1};1' /root/.chik/simulator/mnemonic)
       fi
 
       if [ -n "$mnemonic" ]; then  # Check if mnemonic is non-empty after trimming
-        chia dev sim create --docker-mode --mnemonic "${mnemonic}"
+        chik dev sim create --docker-mode --mnemonic "${mnemonic}"
       else
-        chia dev sim create --docker-mode
+        chik dev sim create --docker-mode
       fi
 
-      chia stop -d all
-      chia keys show --show-mnemonic-seed --json | jq -r '.keys[0].mnemonic' > /root/.chia/simulator/mnemonic
+      chik stop -d all
+      chik keys show --show-mnemonic-seed --json | jq -r '.keys[0].mnemonic' > /root/.chik/simulator/mnemonic
     fi
 fi
 
 # shellcheck disable=SC2086
-chia ${chia_args} init --fix-ssl-permissions
+chik ${chik_args} init --fix-ssl-permissions
 
 if [[ -n ${ca} ]]; then
-  if ! openssl verify -CAfile "${ca}/private_ca.crt" "${CHIA_ROOT}/config/ssl/harvester/private_harvester.crt" &>/dev/null; then
+  if ! openssl verify -CAfile "${ca}/private_ca.crt" "${CHIK_ROOT}/config/ssl/harvester/private_harvester.crt" &>/dev/null; then
     echo "initializing from new CA"
     # shellcheck disable=SC2086
-    chia ${chia_args} init -c "${ca}"
+    chik ${chik_args} init -c "${ca}"
   else
     echo "using existing CA"
   fi
 fi
 
-# Enables whatever the default testnet is for the version of chia that is running
+# Enables whatever the default testnet is for the version of chik that is running
 if [[ ${testnet} == 'true' ]]; then
   echo "configure testnet"
-  chia configure --testnet true
+  chik configure --testnet true
 fi
 
 # Allows using another testnet that isn't the default testnet
@@ -69,7 +69,7 @@ if [[ -n ${network} ]]; then
     .introducer.selected_network = env(network) |
     .wallet.selected_network = env(network) |
     .data_layer.selected_network = env(network)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${network_port} ]]; then
@@ -84,7 +84,7 @@ if [[ -n ${network_port} ]]; then
     .introducer.port = env(network_port) |
     .wallet.full_node_peers[0].port = env(network_port) |
     .wallet.introducer_peer.port = env(network_port)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${introducer_address} ]]; then
@@ -92,7 +92,7 @@ if [[ -n ${introducer_address} ]]; then
   yq -i '
     .full_node.introducer_peer.host = env(introducer_address) |
     .wallet.introducer_peer.host = env(introducer_address)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${dns_introducer_address} ]]; then
@@ -100,49 +100,49 @@ if [[ -n ${dns_introducer_address} ]]; then
   yq -i '
     .full_node.dns_servers = [env(dns_introducer_address)] |
     .wallet.dns_servers = [env(dns_introducer_address)]
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_bootstrap_peers} ]]; then
   echo "Setting seeder.bootstrap_peers to ${seeder_bootstrap_peers}"
   yq -i '
     .seeder.bootstrap_peers = [env(seeder_bootstrap_peers)]
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_minimum_height} ]]; then
   echo "Setting seeder.minimum_height to ${seeder_minimum_height}"
   yq -i '
     .seeder.minimum_height = env(seeder_minimum_height)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_domain_name} ]]; then
   echo "Setting seeder.domain_name to ${seeder_domain_name}"
   yq -i '
     .seeder.domain_name = env(seeder_domain_name)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_nameserver} ]]; then
   echo "Setting seeder.nameserver to ${seeder_nameserver}"
   yq -i '
     .seeder.nameserver = env(seeder_nameserver)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_ttl} ]]; then
   echo "Setting seeder.ttl to ${seeder_ttl}"
   yq -i '
     .seeder.ttl = env(seeder_ttl)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${seeder_soa_rname} ]]; then
   echo "Setting seeder.soa.rname to ${seeder_soa_rname}"
   yq -i '
     .seeder.soa.rname = env(seeder_soa_rname)
-    ' "$CHIA_ROOT/config/config.yaml"
+    ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ ${keys} == "persistent" ]]; then
@@ -154,9 +154,9 @@ elif [[ ${keys} == "copy" ]]; then
   echo "Setting the keys=copy environment variable has been deprecated. If you're seeing this message, you can simply change the value of the variable keys=none"
 elif [[ ${keys} == "generate" ]]; then
   echo "to use your own keys pass the mnemonic as a text file -v /path/to/keyfile:/path/in/container and -e keys=\"/path/in/container\""
-  chia keys generate -l ""
+  chik keys generate -l ""
 else
-  chia keys add -f "${keys}" -l ""
+  chik keys add -f "${keys}" -l ""
 fi
 
 for p in ${plots_dir//:/ }; do
@@ -164,45 +164,45 @@ for p in ${plots_dir//:/ }; do
   if [[ ! $(ls -A "$p") ]]; then
     echo "Plots directory '${p}' appears to be empty, try mounting a plot directory with the docker -v command"
   fi
-  chia plots add -d "${p}"
+  chik plots add -d "${p}"
 done
 
 if [[ ${recursive_plot_scan} == 'true' ]]; then
-  yq -i '.harvester.recursive_plot_scan = true' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.recursive_plot_scan = true' "$CHIK_ROOT/config/config.yaml"
 else
-  yq -i '.harvester.recursive_plot_scan = false' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.recursive_plot_scan = false' "$CHIK_ROOT/config/config.yaml"
 fi
 
-chia configure --upnp "${upnp}"
+chik configure --upnp "${upnp}"
 
 if [[ -n "${log_level}" ]]; then
-  chia configure --log-level "${log_level}"
+  chik configure --log-level "${log_level}"
 fi
 
 if [[ -n "${peer_count}" ]]; then
-  chia configure --set-peer-count "${peer_count}"
+  chik configure --set-peer-count "${peer_count}"
 fi
 
 if [[ -n "${outbound_peer_count}" ]]; then
-  chia configure --set_outbound-peer-count "${outbound_peer_count}"
+  chik configure --set_outbound-peer-count "${outbound_peer_count}"
 fi
 
 if [[ -n ${farmer_address} && -n ${farmer_port} ]]; then
-  chia configure --set-farmer-peer "${farmer_address}:${farmer_port}"
+  chik configure --set-farmer-peer "${farmer_address}:${farmer_port}"
 fi
 
 if [[ -n ${crawler_db_path} ]]; then
-  chia configure --crawler-db-path "${crawler_db_path}"
+  chik configure --crawler-db-path "${crawler_db_path}"
 fi
 
 if [[ -n ${crawler_minimum_version_count} ]]; then
-  chia configure --crawler-minimum-version-count "${crawler_minimum_version_count}"
+  chik configure --crawler-minimum-version-count "${crawler_minimum_version_count}"
 fi
 
 if [[ -n ${self_hostname} ]]; then
-  yq -i '.self_hostname = env(self_hostname)' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.self_hostname = env(self_hostname)' "$CHIK_ROOT/config/config.yaml"
 else
-  yq -i '.self_hostname = "127.0.0.1"' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.self_hostname = "127.0.0.1"' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n ${full_node_peer} ]]; then
@@ -216,39 +216,39 @@ if [[ -n ${full_node_peer} ]]; then
   .timelord.full_node_peers[0].port = env(full_node_peer_port) |
   .farmer.full_node_peers[0].host = env(full_node_peer_host) |
   .farmer.full_node_peers[0].port = env(full_node_peer_port)
-  ' "$CHIA_ROOT/config/config.yaml"
+  ' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ ${log_to_file} != 'true' ]]; then
-  sed -i 's/log_stdout: false/log_stdout: true/g' "$CHIA_ROOT/config/config.yaml"
+  sed -i 's/log_stdout: false/log_stdout: true/g' "$CHIK_ROOT/config/config.yaml"
 else
-  sed -i 's/log_stdout: true/log_stdout: false/g' "$CHIA_ROOT/config/config.yaml"
+  sed -i 's/log_stdout: true/log_stdout: false/g' "$CHIK_ROOT/config/config.yaml"
 fi
 
 # Compressed plot harvesting settings.
 if [[ -n "$parallel_decompressor_count" && "$parallel_decompressor_count" != 0 ]]; then
-  yq -i '.harvester.parallel_decompressor_count = env(parallel_decompressor_count)' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.parallel_decompressor_count = env(parallel_decompressor_count)' "$CHIK_ROOT/config/config.yaml"
 else
-  yq -i '.harvester.parallel_decompressor_count = 0' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.parallel_decompressor_count = 0' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n "$decompressor_thread_count" && "$decompressor_thread_count" != 0 ]]; then
-  yq -i '.harvester.decompressor_thread_count = env(decompressor_thread_count)' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.decompressor_thread_count = env(decompressor_thread_count)' "$CHIK_ROOT/config/config.yaml"
 else
-  yq -i '.harvester.decompressor_thread_count = 0' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.decompressor_thread_count = 0' "$CHIK_ROOT/config/config.yaml"
 fi
 
 if [[ -n "$use_gpu_harvesting" && "$use_gpu_harvesting" == 'true' ]]; then
-  yq -i '.harvester.use_gpu_harvesting = True' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.use_gpu_harvesting = True' "$CHIK_ROOT/config/config.yaml"
 else
-  yq -i '.harvester.use_gpu_harvesting = False' "$CHIA_ROOT/config/config.yaml"
+  yq -i '.harvester.use_gpu_harvesting = False' "$CHIK_ROOT/config/config.yaml"
 fi
 
 # Install timelord if service variable contains timelord substring
 if [ -z "${service##*timelord*}" ]; then
     echo "Installing timelord using install-timelord.sh"
 
-    # install-timelord.sh relies on lsb-release for determining the cmake installation method, and git for building chiavdf
+    # install-timelord.sh relies on lsb-release for determining the cmake installation method, and git for building chikvdf
     DEBIAN_FRONTEND=noninteractive apt-get update
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y lsb-release git
 

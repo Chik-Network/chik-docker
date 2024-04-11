@@ -1,21 +1,21 @@
-# Official Chia Docker Container
+# Official Chik Docker Container
 
 ## Quick Start
 
-These examples shows valid setups using Chia for both docker run and docker-compose. Note that you should read some documentation at some point, but this is a good place to start.
+These examples shows valid setups using Chik for both docker run and docker-compose. Note that you should read some documentation at some point, but this is a good place to start.
 
 ### Docker run
 Simple example:
 ```bash
-docker run --name chia --expose=8444 -v /path/to/plots:/plots -d ghcr.io/chia-network/chia:latest
+docker run --name chik --expose=9678 -v /path/to/plots:/plots -d ghcr.io/chik-network/chik:latest
 ```
 Syntax
 ```bash
-docker run [--name <container-name>] [--expose=<port>] [-v </path/to/plots:/plots>] -d ghcr.io/chia-network/chia:latest
+docker run [--name <container-name>] [--expose=<port>] [-v </path/to/plots:/plots>] -d ghcr.io/chik-network/chik:latest
 ```
 Optional Docker parameters:
-- Give the container a name: `--name=chia`
-- Accept incoming connections: `--expose=8444`
+- Give the container a name: `--name=chik`
+- Accept incoming connections: `--expose=9678`
 - Volume mount plots: `-v /path/to/plots:/plots`
 
 
@@ -24,19 +24,19 @@ Optional Docker parameters:
 ```yaml
 version: "3.6"
 services:
-  chia:
-    container_name: chia
+  chik:
+    container_name: chik
     restart: unless-stopped
-    image: ghcr.io/chia-network/chia:latest
+    image: ghcr.io/chik-network/chik:latest
     ports:
-      - 8444:8444
+      - 9678:9678
     volumes:
       - /path/to/plots:/plots
 ```
 
 ## Configuration
 
-You can modify the behavior of your Chia container by setting specific environment variables.
+You can modify the behavior of your Chik container by setting specific environment variables.
 
 ### Timezone
 
@@ -54,15 +54,15 @@ To use your own keys pass a file with your mnemonic as arguments on startup
 ```
 or pass keys into the running container with your mnemonic
 ```bash
-docker exec -it <container-name> venv/bin/chia keys add
+docker exec -it <container-name> venv/bin/chik keys add
 ```
-alternatively you can pass in your local keychain, if you have previously deployed chia with these keys on the host machine
+alternatively you can pass in your local keychain, if you have previously deployed chik with these keys on the host machine
 ```bash
 -v ~/.local/share/python_keyring/:/root/.local/share/python_keyring/
 ```
 or if you would like to persist the entire mainnet subdirectory and not touch the key directories at all
 ```bash
--v ~/.chia/mainnet:/root/.chia/mainnet -e keys="persistent"
+-v ~/.chik/mainnet:/root/.chik/mainnet -e keys="persistent"
 ```
 
 
@@ -70,8 +70,8 @@ or if you would like to persist the entire mainnet subdirectory and not touch th
 
 You can persist whole db and configuration, simply mount it to Host.
 ```bash
--v ~/.chia:/root/.chia \
--v ~/.chia_keys:/root/.chia_keys
+-v ~/.chik:/root/.chik \
+-v ~/.chik_keys:/root/.chik_keys
 ```
 
 ### Farmer only
@@ -92,7 +92,7 @@ To start a harvester only node pass
 
 To set the full_node peer's hostname and port, set the "full_node_peer" environment variable with the format `hostname:port`
 ```bash
--e full_node_peer="node:8444"
+-e full_node_peer="node:9678"
 ```
 This will configure the full_node peer hostname and port for the wallet, farmer, and timelord sections of the config.yaml file.
 
@@ -113,9 +113,9 @@ By default, Docker requires a container restart to discover newly mounted filesy
 
 ### Compressed Plots
 
-There are a few environment variables that control compressed plot settings for Harvesters ran with chia-docker. The default settings leave compressed plot harvesting disabled, but it can be enabled.
+There are a few environment variables that control compressed plot settings for Harvesters ran with chik-docker. The default settings leave compressed plot harvesting disabled, but it can be enabled.
 
-See the [official documentation](https://docs.chia.net/farming-compressed-plots/#cli) for a description on what each of these settings do.
+See the [official documentation](https://docs.chiknetwork.com/farming-compressed-plots/#cli) for a description on what each of these settings do.
 
 Compressed plot farming can be enabled by setting the following:
 
@@ -155,7 +155,7 @@ To disable UPnP support (enabled by default)
 ```
 
 ### Log to file
-Log file can be used by external tools like chiadog, etc. Enabled by default.
+Log file can be used by external tools like chikdog, etc. Enabled by default.
 
 To disable log file generation, use
 ```bash
@@ -167,19 +167,19 @@ To disable log file generation, use
 ```yaml
 version: "3.6"
 services:
-  chia:
-    container_name: chia
+  chik:
+    container_name: chik
     restart: unless-stopped
-    image: ghcr.io/chia-network/chia:latest
+    image: ghcr.io/chik-network/chik:latest
     ports:
-      - 8444:8444
+      - 9678:9678
     environment:
       # Farmer Only
 #     service: farmer-only
       # Harvester Only
 #     service: harvester
 #     farmer_address: 192.168.0.10
-#     farmer_port: 8447
+#     farmer_port: 9681
 #     ca: /path/in/container
 #     keys: generate
       # Harvester Only END
@@ -195,24 +195,24 @@ services:
 #     log_to_file: "true"
     volumes:
       - /path/to/plots:/plots
-      - /home/user/.chia:/root/.chia
+      - /home/user/.chik:/root/.chik
 #     - /home/user/mnemonic:/path/in/container
 ```
 
 ## CLI
 
-You can run commands externally with venv (this works for most chia [CLI commands](https://github.com/Chia-Network/chia-blockchain/wiki/CLI-Commands-Reference))
+You can run commands externally with venv (this works for most chik [CLI commands](https://github.com/Chik-Network/chik-blockchain/wiki/CLI-Commands-Reference))
 ```bash
-docker exec -it chia venv/bin/chia plots add -d /plots
+docker exec -it chik venv/bin/chik plots add -d /plots
 ```
 
 ### Is it working?
 
 You can see status from outside the container
 ```bash
-$ docker exec -it chia venv/bin/chia farm summary
+$ docker exec -it chik venv/bin/chik farm summary
 Farming status: Farming
-Total chia farmed: xx
+Total chik farmed: xx
 User transaction fees: xx
 Block rewards: xx
 Last height farmed: xxxxxxx
@@ -222,20 +222,20 @@ Plot count for all harvesters: xxx
 Total size of plots: xx.xxx TiB
 Estimated network space: 30.638 EiB
 Expected time to win: x months and x weeks
-Note: log into your key using 'chia wallet show' to see rewards for each key
+Note: log into your key using 'chik wallet show' to see rewards for each key
 ```
 
-Or via `chia peer`. Note that you have to specify your component.
+Or via `chik peer`. Note that you have to specify your component.
 
 ```bash
-docker exec -it chia venv/bin/chia peer -c {farmer|wallet|full_node|harvester|data_layer}
+docker exec -it chik venv/bin/chik peer -c {farmer|wallet|full_node|harvester|data_layer}
 ```
 
-Or via `chia show -s`.
+Or via `chik show -s`.
 
 ```bash
-$ docker exec -it chia venv/bin/chia show -s
-Network: mainnet    Port: 8444   RPC Port: 8555
+$ docker exec -it chik venv/bin/chik show -s
+Network: mainnet    Port: 9678   RPC Port: 9789
 Node ID: xxxxx
 Genesis Challenge: xxxxx
 Current Blockchain Status: Full Node Synced
@@ -264,43 +264,43 @@ Current VDF sub_slot_iters: 574619648
 ### Connect to testnet?
 
 ```bash
-docker run -d --expose=58444 -e testnet=true --name chia ghcr.io/chia-network/chia:latest
+docker run -d --expose=59678 -e testnet=true --name chik ghcr.io/chik-network/chik:latest
 ```
 
 ### Connect remotely
 
-Sometimes you may want to access Chia RPCs from outside of the container, or connect a GUI to a remote Chia farm. In those instances, you may need to configure the `self_hostname` key in the Chia config file.
+Sometimes you may want to access Chik RPCs from outside of the container, or connect a GUI to a remote Chik farm. In those instances, you may need to configure the `self_hostname` key in the Chik config file.
 
-By default this is set to `127.0.0.1` in chia-docker, but can be configured using the `self_hostname` environment variable, like so:
+By default this is set to `127.0.0.1` in chik-docker, but can be configured using the `self_hostname` environment variable, like so:
 
 ```bash
-docker run -d -e self_hostname="0.0.0.0" --name chia ghcr.io/chia-network/chia:latest
+docker run -d -e self_hostname="0.0.0.0" --name chik ghcr.io/chik-network/chik:latest
 ```
 
-This sets self_hostname in the config to `0.0.0.0`, which will allow you to access the Chia RPC from outside of the container (you will still need a copy of the private cert/key for the component you're attempting to access.)
+This sets self_hostname in the config to `0.0.0.0`, which will allow you to access the Chik RPC from outside of the container (you will still need a copy of the private cert/key for the component you're attempting to access.)
 
 #### Need a wallet?
 
 To get new wallet, execute command and follow the prompts:
 
 ```bash
-docker exec -it chia-farmer1 venv/bin/chia wallet show
+docker exec -it chik-farmer1 venv/bin/chik wallet show
 ```
 
 ## Building
 
 ```bash
-docker build -t chia --build-arg BRANCH=latest .
+docker build -t chik --build-arg BRANCH=latest .
 ```
 
 ## Healthchecks
 
-The Dockerfile includes a HEALTHCHECK instruction that runs one or more curl commands against the Chia RPC API. In Docker, this can be disabled using an environment variable `-e healthcheck=false` as part of the `docker run` command. Or in docker-compose you can add it to your Chia service, like so:
+The Dockerfile includes a HEALTHCHECK instruction that runs one or more curl commands against the Chik RPC API. In Docker, this can be disabled using an environment variable `-e healthcheck=false` as part of the `docker run` command. Or in docker-compose you can add it to your Chik service, like so:
 
 ```yaml
 version: "3.6"
 services:
-  chia:
+  chik:
     ...
     environment:
       healthcheck: "false"
@@ -329,6 +329,6 @@ See [Configure Probes](https://kubernetes.io/docs/tasks/configure-pod-container/
 
 ## Simulator
 
-`docker run -e service=simulator -v /local/path/to/simulator:/root/.chia/simulator ghcr.io/chia-network/chia:latest`
+`docker run -e service=simulator -v /local/path/to/simulator:/root/.chik/simulator ghcr.io/chik-network/chik:latest`
 
 Mounts the simulator root to the provided local path to make the test plots and the mnemonic persistent. Mnemonic will be available at /local/path/to/simulator/mnemonic
