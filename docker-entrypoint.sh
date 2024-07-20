@@ -11,6 +11,12 @@ cd /chik-blockchain || exit 1
 # shellcheck disable=SC1091
 . ./activate
 
+if [[ ${manual_config} == "true" ]]; then
+    # Manual config mode skips everything below and lets you manage your config manually
+    exec "$@"
+    return
+fi
+
 # Set a few overrides if the service variable contains simulator
 if [ -z "${service##*simulator*}" ]; then
     echo "Setting up environment for simulator..."
@@ -219,6 +225,21 @@ if [[ -n ${full_node_peer} ]]; then
   ' "$CHIK_ROOT/config/config.yaml"
 fi
 
+if [[ -n ${trusted_cidrs} ]]; then
+  echo "Changing trusted cidr setting in config.yaml to value: $trusted_cidrs"
+  yq -i '
+  .wallet.trusted_cidrs = env(trusted_cidrs) |
+  .full_node.trusted_cidrs = env(trusted_cidrs)
+  ' "$CHIK_ROOT/config/config.yaml"
+fi
+
+if [[ -n ${xck_spam_amount} ]]; then
+  echo "Setting xck spam amount in config.yaml to value: $xck_spam_amount"
+  yq -i '
+  .wallet.xck_spam_amount = env(xck_spam_amount)
+  ' "$CHIK_ROOT/config/config.yaml"
+fi
+
 if [[ ${log_to_file} != 'true' ]]; then
   sed -i 's/log_stdout: false/log_stdout: true/g' "$CHIK_ROOT/config/config.yaml"
 else
@@ -246,6 +267,13 @@ fi
 
 # Install timelord if service variable contains timelord substring
 if [ -z "${service##*timelord*}" ]; then
+    arch=$(uname -m)
+    echo "Info: detected CPU architecture $arch"
+    if [ "$arch" != "x86_64" ]; then
+      echo "Error: Unsupported CPU architecture for running the timelord component. Requires x86_64."
+      exit 1
+    fi
+
     echo "Installing timelord using install-timelord.sh"
 
     # install-timelord.sh relies on lsb-release for determining the cmake installation method, and git for building chikvdf
