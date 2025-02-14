@@ -6,6 +6,24 @@ if [[ -n "${TZ}" ]]; then
   ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime && echo "$TZ" > /etc/timezone
 fi
 
+# Install alternate version of chik if source mode is requested
+# Enables testing dev versions of chik-docker in the container even if the version is not published to the container registry
+if [[ -n ${source_ref} ]]; then
+    echo "Installing chik from source:"
+    echo "  repo: ${CHIK_REPO}"
+    echo "  ref:  ${source_ref}"
+
+    cd / || exit 1
+    DEBIAN_FRONTEND=noninteractive apt-get update
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y lsb-release sudo git
+
+    rm -rf /chik-blockchain
+    git clone --recurse-submodules=mozilla-ca "$CHIK_REPO" /chik-blockchain
+    cd /chik-blockchain || exit 1
+    git checkout "${source_ref}"
+    /bin/sh ./install.sh -s
+fi
+
 cd /chik-blockchain || exit 1
 
 # shellcheck disable=SC1091
@@ -112,7 +130,7 @@ fi
 if [[ -n ${seeder_bootstrap_peers} ]]; then
   echo "Setting seeder.bootstrap_peers to ${seeder_bootstrap_peers}"
   yq -i '
-    .seeder.bootstrap_peers = [env(seeder_bootstrap_peers)]
+    .seeder.bootstrap_peers = (env(seeder_bootstrap_peers) | split(","))
     ' "$CHIK_ROOT/config/config.yaml"
 fi
 
@@ -295,6 +313,12 @@ if [[ ${service} == "harvester" ]]; then
     echo "A farmer peer address, port, and ca path are required."
     exit
   fi
+fi
+
+# Check if any of the env vars start with "chik." or "chik__" and if so, process the config with chik-tools
+if env | grep -qE '^chik(\.|__)'; then
+    echo "Found environment variables starting with 'chik.' or 'chik__' - Running chik-tools"
+    /usr/bin/chik-tools config edit --config "$CHIK_ROOT/config/config.yaml"
 fi
 
 exec "$@"

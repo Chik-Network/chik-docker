@@ -24,12 +24,16 @@ RUN echo "cloning ${BRANCH}" && \
 
 # Get yq for chik config changes
 FROM mikefarah/yq:4 AS yq
+# Get chik-tools for a new experimental chik config management strategy
+FROM ghcr.io/chik-network/chik-tools:latest AS chik-tools
 
 # IMAGE BUILD
 FROM python:3.11-slim
 
 EXPOSE 9789 9678
 
+# CHIK_REPO allows changing to an alternate repo if running in the mode that builds from source on startup
+ENV CHIK_REPO=https://github.com/Chik-Network/chik-blockchain.git
 ENV CHIK_ROOT=/root/.chik/mainnet
 ENV keys="generate"
 ENV service="farmer"
@@ -61,6 +65,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     dpkg-reconfigure -f noninteractive tzdata
 
 COPY --from=yq /usr/bin/yq /usr/bin/yq
+COPY --from=chik-tools /chik-tools /usr/bin/chik-tools
 COPY --from=chik_build /chik-blockchain /chik-blockchain
 
 ENV PATH=/chik-blockchain/venv/bin:$PATH
