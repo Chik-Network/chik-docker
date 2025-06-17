@@ -315,6 +315,23 @@ if [[ ${service} == "harvester" ]]; then
   fi
 fi
 
+# Configure trusted peers if specified
+if [[ -n ${trusted_peers} ]]; then
+  echo "Adding trusted peers from environment variable"
+  IFS=',' read -ra TRUSTED_PEERS <<< "$trusted_peers"
+
+  # Loop through each trusted node
+  for peer in "${TRUSTED_PEERS[@]}"; do
+    address="${peer%:*}"
+    port="${peer#*:}"
+
+    if [[ -n $address ]]; then
+      echo "Adding trusted peer: $address:$port"
+      /usr/bin/chik-tools config add-trusted-peer -y "$address" "$port"
+    fi
+  done
+fi
+
 # Check if any of the env vars start with "chik." or "chik__" and if so, process the config with chik-tools
 if env | grep -qE '^chik(\.|__)'; then
     echo "Found environment variables starting with 'chik.' or 'chik__' - Running chik-tools"
