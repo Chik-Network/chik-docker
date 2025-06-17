@@ -76,9 +76,9 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - uses: Chik-Network/actions/github/glue@main
-        with:
-          json_data: '{"chik_ref":"${{ steps.latest-tag.outputs.result }}"}'
-          glue_url: ${{ secrets.GLUE_API_URL }}
-          glue_project: "docker-new-release"
-          glue_path: "trigger"
+#      - uses: Chik-Network/actions/github/glue@main
+#        with:
+#          json_data: '{"chik_ref":"${{ steps.latest-tag.outputs.result }}"}'
+#          glue_url: ${{ secrets.GLUE_API_URL }}
+#          glue_project: "docker-new-release"
+#          glue_path: "trigger"
